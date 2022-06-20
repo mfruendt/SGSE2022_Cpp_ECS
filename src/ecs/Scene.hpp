@@ -12,16 +12,6 @@
 struct Scene
 {
 	/**
-	 * @brief Information that each entity holds
-	 *
-	 */
-	//struct EntityDesc
-	//{
-	//	EntityID id;
-	//	ComponentMask mask;
-	//};
-
-	/**
 	 * @brief Create a new entity
 	 *
 	 * @return EntityID ID of the created entity
@@ -134,12 +124,6 @@ struct Scene
 	 *
 	 */
 	std::vector<Entity> entities;
-
-	/**
-	 * @brief Pools for component types in this scene
-	 *
-	 */
-	//std::vector<ComponentPool*> componentPools;
 
 	/**
 	 * @brief List of free entity IDs
