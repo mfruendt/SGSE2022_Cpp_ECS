@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ecs/ComponentPool.hpp"
+#include "ecs/Entity.hpp"
 #include "ecs/Util.hpp"
 #include <vector>
 
@@ -14,11 +15,11 @@ struct Scene
 	 * @brief Information that each entity holds
 	 *
 	 */
-	struct EntityDesc
-	{
-		EntityID id;
-		ComponentMask mask;
-	};
+	//struct EntityDesc
+	//{
+	//	EntityID id;
+	//	ComponentMask mask;
+	//};
 
 	/**
 	 * @brief Create a new entity
@@ -31,9 +32,10 @@ struct Scene
 		{
 			EntityIndex newIndex = freeEntities.back();
 			freeEntities.pop_back();
-			EntityID newID = CreateEntityId(newIndex, GetEntityVersion(entities[newIndex].id));
-			entities[newIndex].id = newID;
-			return entities[newIndex].id;
+			Entity* entity = &entities[GetEntityIndex(newIndex)];
+			EntityID newID = CreateEntityId(newIndex, GetEntityVersion(entity->id));
+			entity->id = newID;
+			return entity->id;
 		}
 		entities.push_back({ CreateEntityId(EntityIndex(entities.size()), 0), ComponentMask() });
 		return entities.back().id;
@@ -49,13 +51,15 @@ struct Scene
 	template <typename T>
 	T* Get(EntityID id)
 	{
+		Entity* entity = &entities[GetEntityIndex(id)];
+
 		int componentId = GetId<T>();
-		if (!entities[GetEntityIndex(id)].mask.test(componentId))
+		if (!entity->mask.test(componentId))
 		{
 			return nullptr;
 		}
 
-		T* component = static_cast<T*>(componentPools[componentId]->get(GetEntityIndex(id)));
+		T* component = static_cast<T*>(entity->componentPools[componentId]->get());
 		return component;
 	}
 
@@ -70,22 +74,23 @@ struct Scene
 	T* Assign(EntityID id)
 	{
 		int componentId = GetId<T>();
+		Entity* entity = &entities[GetEntityIndex(id)];
 
 		// Add a new component pool if this type is first used
-		if (componentPools.size() <= componentId)
+		if (entity->componentPools.size() <= componentId)
 		{
-			componentPools.resize(componentId + 1, nullptr);
+			entity->componentPools.resize(componentId + 1, nullptr);
 		}
-		if (componentPools[componentId] == nullptr)
+		if (entity->componentPools[componentId] == nullptr)
 		{
-			componentPools[componentId] = new ComponentPool(sizeof(T));
+			entity->componentPools[componentId] = new ComponentPool(sizeof(T));
 		}
 
 		// Looks up the component in the pool, and initializes it with placement new
-		T* component = new (componentPools[componentId]->get(GetEntityIndex(id))) T();
+		T* component = new (entity->componentPools[componentId]->get()) T();
 
 		// Set the bit for this component to true and return the created component
-		entities[GetEntityIndex(id)].mask.set(componentId);
+		entity->mask.set(componentId);
 		return component;
 	}
 
@@ -98,14 +103,16 @@ struct Scene
 	template <typename T>
 	void Remove(EntityID id)
 	{
+		Entity* entity = &entities[GetEntityIndex(GetEntityIndex(id))];
+
 		// Ensures you're not accessing an entity that has been deleted
-		if (entities[GetEntityIndex(GetEntityIndex(id))].id != id)
+		if (entity->id != id)
 		{
 			return;
 		}
 
 		int componentId = GetId<T>();
-		entities[GetEntityIndex(GetEntityIndex(id))].mask.reset(componentId);
+		entity->mask.reset(componentId);
 	}
 
 	/**
@@ -116,8 +123,9 @@ struct Scene
 	void DestroyEntity(EntityID id)
 	{
 		EntityID newID = CreateEntityId(EntityIndex(-1), GetEntityVersion(id) + 1);
-		entities[GetEntityIndex(id)].id = newID;
-		entities[GetEntityIndex(id)].mask.reset();
+		Entity* entity = &entities[GetEntityIndex(id)];
+		entity->id = newID;
+		entity->mask.reset();
 		freeEntities.push_back(GetEntityIndex(id));
 	}
 
@@ -125,13 +133,13 @@ struct Scene
 	 * @brief All entities that are contained in this scene
 	 *
 	 */
-	std::vector<EntityDesc> entities;
+	std::vector<Entity> entities;
 
 	/**
 	 * @brief Pools for component types in this scene
 	 *
 	 */
-	std::vector<ComponentPool*> componentPools;
+	//std::vector<ComponentPool*> componentPools;
 
 	/**
 	 * @brief List of free entity IDs

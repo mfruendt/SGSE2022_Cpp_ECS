@@ -6,7 +6,7 @@
  * @brief Maximum number of entities
  *
  */
-#define NUM_OF_ENTITIES (512)
+#define NUM_OF_ENTITIES (500)
 
 /**
  * @brief Create an invalid entity

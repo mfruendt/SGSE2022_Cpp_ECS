@@ -35,9 +35,9 @@ struct ComponentPool
  	* @param index Index of the component
  	* @return void* Pointer to the component
  	*/
-	inline void* get(size_t index)
+	inline void* get()
 	{
-		return components + index * elementSize;
+		return components;
 	}
 
 	/**
