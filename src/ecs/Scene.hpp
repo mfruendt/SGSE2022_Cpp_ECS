@@ -93,7 +93,7 @@ struct Scene
 	template <typename T>
 	void Remove(EntityID id)
 	{
-		Entity* entity = &entities[GetEntityIndex(GetEntityIndex(id))];
+		Entity* entity = &entities[GetEntityIndex(id)];
 
 		// Ensures you're not accessing an entity that has been deleted
 		if (entity->id != id)
